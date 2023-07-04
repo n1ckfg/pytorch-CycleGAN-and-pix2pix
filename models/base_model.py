@@ -198,6 +198,28 @@ class BaseModel(ABC):
                     self.__patch_instance_norm_state_dict(state_dict, net, key.split('.'))
                 net.load_state_dict(state_dict)
 
+                # https://github.com/junyanz/pytorch-CycleGAN-and-pix2pix/issues/1113
+                net.eval()
+                net.cuda()  # in this example using cuda()
+
+                """
+                if len(self.gpu_ids) > 0 and torch.cuda.is_available():
+                    torch.save(net.module.cpu().state_dict(), save_path)
+                    net.cuda(self.gpu_ids[0])
+                else:
+                    torch.save(net.cpu().state_dict(), save_path)
+                """
+
+                batch_size = 1  
+                input_shape = (3, 512, 512)  # in my case its 512
+                export_onnx_file = load_filename[:-4]+".onnx"  
+                save_path = os.path.join(self.save_dir, export_onnx_file)
+
+                dinput = torch.randn(batch_size, *input_shape).cuda()   #same with net: cuda()
+                torch.onnx.export(net, dinput, save_path)
+
+                print('The ONNX file ' + export_onnx_file + ' is saved at %s' % save_path)
+
     def print_networks(self, verbose):
         """Print the total number of parameters in the network and (if verbose) network architecture
 
