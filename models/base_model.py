@@ -211,7 +211,9 @@ class BaseModel(ABC):
                 """
 
                 batch_size = 1  
-                input_shape = (3, 512, 512)  # in my case its 512
+                # * * * This needs to match your Pytorch model * * *
+                input_shape = (3, 256, 256)  # input_shape = (3, 512, 512)
+                # * * * * * * * * * * * * * * * * * * * * * * * * *
                 export_onnx_file = load_filename[:-4]+".onnx"  
                 save_path = os.path.join(self.save_dir, export_onnx_file)
 
