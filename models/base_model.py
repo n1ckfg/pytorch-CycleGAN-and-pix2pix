@@ -3,7 +3,8 @@ import torch
 from collections import OrderedDict
 from abc import ABC, abstractmethod
 from . import networks
-
+import onnx
+from onnxsim import simplify
 
 class BaseModel(ABC):
     """This class is an abstract base class (ABC) for models.
@@ -220,7 +221,17 @@ class BaseModel(ABC):
                 dinput = torch.randn(batch_size, *input_shape).cuda()   #same with net: cuda()
                 torch.onnx.export(net, dinput, save_path)
 
-                print('The ONNX file ' + export_onnx_file + ' is saved at %s' % save_path)
+                print('Saved ONNX file to %s' % save_path)
+
+                onnx_model = onnx.load(save_path)
+
+                onnx_model_simp, check = simplify(onnx_model)
+                assert check, "Simplified ONNX model could not be validated"
+
+                save_path2 = save_path.split(".onnx")[0] + "_simplified.onnx"
+                onnx.save(onnx_model_simp, save_path2)
+
+                print('Saved simplified ONNX file to %s' % save_path2)
 
     def print_networks(self, verbose):
         """Print the total number of parameters in the network and (if verbose) network architecture
